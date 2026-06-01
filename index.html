@@ -36,6 +36,16 @@
       "To pass the class, students must score at least 70% overall."
     ];
 
+    // Local Backup Cheat Sheet for common general questions if the online server blinks
+    const LOCAL_GENERAL_ANSWERS = {
+      "india": "The capital of India is New Delhi.",
+      "capital": "The capital of India is New Delhi.",
+      "hi": "Hello there! How can I help you today?",
+      "hello": "Hi! Great to meet you. Ask me anything!",
+      "name": "I am Eshwar's Smart Hybrid Assistant chatbot!",
+      "who": "I am an AI assistant built by Eshwar."
+    };
+
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const chatBox = document.getElementById('chat-box');
@@ -75,10 +85,8 @@
       // 🧠 2. Smart System Prompt Builder
       let systemInstruction = "";
       if (matchFound) {
-        // If a match is found in our files, force the AI to use that specific text context
         systemInstruction = `You are a helpful AI assistant. Answer the user's query prioritizing this custom context data: ${foundContext}`;
       } else {
-        // If NO match is found, unlock its general global knowledge so it can answer everything!
         systemInstruction = "You are an all-knowing, creative, and intelligent AI assistant. Answer the user's question accurately using your general knowledge pool.";
       }
 
@@ -104,12 +112,30 @@
         appendMessage(aiAnswer, false);
       } catch (error) {
         loadingBubble.remove();
-        // Fallback protection if the external server experiences lag
+        
+        // 🛡️ Advanced Smart Fallback Protection
+        let backupAnswer = "";
+        
         if (matchFound) {
-          appendMessage(`[Local Retrieval Match]: ${foundContext}`, false);
+          // If custom data matched, use it
+          backupAnswer = `[Knowledge Retrieval]: ${foundContext}`;
         } else {
-          appendMessage("I'm having a brief network connection issue with my global brain. Try asking a context question like 'Project Alpha'!", false);
+          // Check if any word matches our local general facts array
+          const words = query.toLowerCase().split(" ");
+          for (let word of words) {
+            if (LOCAL_GENERAL_ANSWERS[word]) {
+              backupAnswer = `[Local Backup]: ${LOCAL_GENERAL_ANSWERS[word]}`;
+              break;
+            }
+          }
         }
+
+        // If it's a completely unique question and servers are busy, show a cleaner reminder
+        if (!backupAnswer) {
+          backupAnswer = "The online public AI server is a bit busy right now! Try asking something like 'What is the capital of India', 'Hello', or 'Project Alpha'.";
+        }
+
+        appendMessage(backupAnswer, false);
       }
     });
   </script>
