@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eshwar's Autonomous AI Chatbot</title>
+  <title>Eshwar's AI Chatbot</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-gray-100 h-screen flex flex-col justify-between p-4 font-sans">
@@ -11,33 +11,25 @@
   <div class="max-w-xl w-full mx-auto bg-white shadow-md rounded-lg flex flex-col h-full overflow-hidden">
     <!-- Header -->
     <div class="bg-blue-600 p-4 text-white font-bold text-center shadow-sm">
-      🚀 Eshwar's Independent Hybrid Assistant
-    </div>
-
-    <!-- Status Bar (Shows AI model loading progress) -->
-    <div id="status-bar" class="bg-amber-50 border-b border-amber-200 text-amber-800 text-xs px-4 py-2 font-medium text-center">
-      ⚙️ Initializing local fallback capabilities...
+      🤖 Eshwar's RAG Assistant
     </div>
 
     <!-- Chat History -->
     <div id="chat-box" class="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
       <div class="bg-gray-200 text-gray-800 p-3 rounded-lg max-w-[80%] text-sm">
-        Hello! I am your advanced local assistant. I can answer questions about your custom documentation, write code, or just chat about absolutely anything!
+        Hello! Ask me about Project Alpha, grading policies, or passing scores.
       </div>
     </div>
 
     <!-- Input Box -->
     <form id="chat-form" class="p-3 border-t flex gap-2 bg-white">
-      <input id="user-input" type="text" placeholder="Ask me absolutely anything..." class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-      <button id="send-btn" type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">Send</button>
+      <input id="user-input" type="text" placeholder="Type your question..." class="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition">Send</button>
     </form>
   </div>
 
-  <!-- Load WebLLM module directly from the web delivery network -->
-  <script type="module">
-    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
-
-    // 📚 Hidden knowledge base (The 'RAG' textbook)
+  <script>
+    // Hidden knowledge base (The 'RAG' textbook)
     const KNOWLEDGE_BASE = [
       "Project Alpha was launched on June 1, 2026, by a student named Alex.",
       "The grading policy states that submitting late results in a 10% penalty per day.",
@@ -47,29 +39,6 @@
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const chatBox = document.getElementById('chat-box');
-    const statusBar = document.getElementById('status-bar');
-    const sendBtn = document.getElementById('send-btn');
-
-    let engine;
-    // We point to a highly compact, lightning-fast 0.5 Billion parameter stable model
-    const modelId = "Qwen2-0.5B-Instruct-q4f16_1-MLC"; 
-
-    // Automatically load the AI brain directly inside the browser storage when page opens
-    async function initEngine() {
-      try {
-        engine = new webllm.CreateMLCEngine(modelId, {
-          initProgressCallback: (report) => {
-            statusBar.textContent = `🧠 Loading Global Brain: ${report.text}`;
-          }
-        });
-        statusBar.className = "bg-green-50 border-b border-green-200 text-green-800 text-xs px-4 py-2 font-medium text-center";
-        statusBar.textContent = "✅ Global Brain fully loaded locally! Ready to answer any question.";
-      } catch (err) {
-        statusBar.textContent = "⚠️ Cloud-only mode active. Running queries over backup network.";
-        statusBar.className = "bg-blue-50 border-b border-blue-200 text-blue-800 text-xs px-4 py-2 font-medium text-center";
-      }
-    }
-    initEngine();
 
     function appendMessage(text, isUser) {
       const bubble = document.createElement('div');
@@ -89,7 +58,7 @@
       appendMessage(query, true);
       userInput.value = '';
 
-      // 🔍 1. RAG Retrieval Step: Scan custom notes
+      // 🔍 1. RAG Retrieval Step
       let foundContext = "No custom matching data found in the textbook.";
       let matchFound = false;
       for (let note of KNOWLEDGE_BASE) {
@@ -103,23 +72,17 @@
       appendMessage("Thinking...", false);
       const loadingBubble = chatBox.lastChild;
 
-      // 🧠 2. Smart System Prompt Builder
-      let systemInstruction = "";
-      if (matchFound) {
-        systemInstruction = `You are a helpful AI assistant. Answer the user's query utilizing only this custom context data: ${foundContext}`;
-      } else {
-        systemInstruction = "You are an all-knowing, creative, and intelligent AI assistant. Answer the user's question accurately regarding any topic, language, code, or fact they ask.";
-      }
-
       try {
-        // Try calling the lightning-fast primary server API
+        // 🚀 Using a highly reliable developer API proxy endpoint
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json"
+          },
           body: JSON.stringify({
             model: "google/gemini-2.5-flash:free",
             messages: [
-              { role: "system", content: systemInstruction },
+              { role: "system", content: `You are a helpful AI assistant. Answer the user query using strictly this provided context data: ${foundContext}` },
               { role: "user", content: query }
             ]
           })
@@ -130,30 +93,13 @@
         
         const aiAnswer = result.choices[0]?.message?.content || "I couldn't read the response properly.";
         appendMessage(aiAnswer, false);
-
       } catch (error) {
-        // 🛡️ BORDERLESS LOCAL FALLBACK BRAIN ACCELERATION
-        // If the internet connection drops or the server is busy, your browser's local AI instantly wakes up!
-        try {
-          if (engine) {
-            const reply = await engine.chat.completions.create({
-              messages: [
-                { role: "system", content: systemInstruction },
-                { role: "user", content: query }
-              ]
-            });
-            loadingBubble.remove();
-            appendMessage(`[Local Local Brain]: ${reply.choices[0].message.content}`, false);
-          } else {
-            throw new Error("Local engine not initialized yet.");
-          }
-        } catch (localErr) {
-          loadingBubble.remove();
-          if (matchFound) {
-            appendMessage(`[Knowledge Retrieval Match]: ${foundContext}`, false);
-          } else {
-            appendMessage("I'm experiencing a complete network timeout. Try checking your internet or asking something related to 'Project Alpha'!", false);
-          }
+        loadingBubble.remove();
+        // 🛡️ Safe Fail-over Network Protection: If the external server drops, pull the textbook text directly!
+        if (matchFound) {
+          appendMessage(`[Knowledge Retrieval]: ${foundContext}`, false);
+        } else {
+          appendMessage("I couldn't locate any data relating to that topic in my current documentation files. Try checking for 'Project Alpha'.", false);
         }
       }
     });
